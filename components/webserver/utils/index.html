@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ESP32 WiFi Pentest Tool</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Inter:wght@300;400;500;600;700&display=swap');
+
+    :root {
+      --bg-base:     #0a0c10;
+      --bg-panel:    #0f1117;
+      --bg-card:     #13161f;
+      --bg-hover:    #1a1e2a;
+      --border:      #1e2538;
+      --border-glow: #00e5ff33;
+      --accent:      #00e5ff;
+      --accent-dim:  #00e5ff22;
+      --accent-2:    #7c3aed;
+      --danger:      #ff3b6b;
+      --danger-dim:  #ff3b6b22;
+      --warn:        #f59e0b;
+      --warn-dim:    #f59e0b22;
+      --success:     #10d97e;
+      --success-dim: #10d97e22;
+      --text-1:      #e8eaf0;
+      --text-2:      #8892a4;
+      --text-3:      #4a5568;
+      --mono:        'Share Tech Mono', monospace;
+      --sans:        'Inter', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg-base);
+      color: var(--text-1);
+      font-family: var(--sans);
+      font-size: 14px;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── GRID BG ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 40px 40px;
+      opacity: 0.35;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── HEADER ── */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(10,12,16,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-icon {
+      width: 28px; height: 28px;
+      position: relative;
+    }
+
+    .logo-icon svg { width: 100%; height: 100%; }
+
+    .logo-text {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--accent);
+      letter-spacing: 0.08em;
+    }
+
+    .logo-text span { color: var(--text-2); }
+
+    #status-badge {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      padding: 4px 10px;
+      border-radius: 4px;
+      border: 1px solid;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.3s;
+    }
+
+    #status-badge.ready    { color: var(--success); border-color: var(--success); background: var(--success-dim); }
+    #status-badge.running  { color: var(--warn);    border-color: var(--warn);    background: var(--warn-dim);    }
+    #status-badge.finished { color: var(--accent);  border-color: var(--accent);  background: var(--accent-dim);  }
+    #status-badge.timeout  { color: var(--danger);  border-color: var(--danger);  background: var(--danger-dim);  }
+    #status-badge.error    { color: var(--danger);  border-color: var(--danger);  background: var(--danger-dim);  }
+
+    .pulse {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: currentColor;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.7); }
+    }
+
+    /* ── LAYOUT ── */
+    main {
+      position: relative;
+      z-index: 1;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 28px 24px 60px;
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 20px;
+    }
+
+    @media (max-width: 800px) {
+      main { grid-template-columns: 1fr; }
+    }
+
+    /* ── CARD ── */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-title {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      color: var(--text-2);
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-title::before {
+      content: '';
+      width: 3px; height: 14px;
+      background: var(--accent);
+      border-radius: 2px;
+      box-shadow: 0 0 8px var(--accent);
+    }
+
+    .card-body { padding: 18px; }
+
+    /* ── AP TABLE ── */
+    .col-header {
+      display: grid;
+      grid-template-columns: 1fr 160px 80px;
+      padding: 8px 12px;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      color: var(--text-3);
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--border);
+    }
+
+    #ap-list { list-style: none; max-height: 320px; overflow-y: auto; }
+    #ap-list::-webkit-scrollbar { width: 4px; }
+    #ap-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    #ap-list::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+    .ap-row {
+      display: grid;
+      grid-template-columns: 1fr 160px 80px;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.15s;
+      align-items: center;
+    }
+
+    .ap-row:last-child { border-bottom: none; }
+    .ap-row:hover { background: var(--bg-hover); }
+    .ap-row.selected {
+      background: var(--accent-dim);
+      border-left: 2px solid var(--accent);
+    }
+
+    .ap-ssid {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--text-1);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .ap-bssid {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-2);
+    }
+
+    .rssi-bar-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .rssi-bar {
+      flex: 1;
+      height: 3px;
+      background: var(--bg-hover);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .rssi-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.4s;
+    }
+
+    .rssi-val {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text-3);
+      min-width: 28px;
+      text-align: right;
+    }
+
+    .ap-empty {
+      padding: 36px;
+      text-align: center;
+      font-family: var(--mono);
+      color: var(--text-3);
+      font-size: 12px;
+    }
+
+    .ap-loading {
+      padding: 36px;
+      text-align: center;
+      color: var(--text-2);
+      font-family: var(--mono);
+      font-size: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .spinner {
+      width: 24px; height: 24px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── FORM ── */
+    .form-group { margin-bottom: 16px; }
+
+    label {
+      display: block;
+      font-size: 11px;
+      font-family: var(--mono);
+      letter-spacing: 0.1em;
+      color: var(--text-2);
+      text-transform: uppercase;
+      margin-bottom: 7px;
+    }
+
+    select, input[type="number"] {
+      width: 100%;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-1);
+      font-family: var(--mono);
+      font-size: 13px;
+      padding: 9px 12px;
+      outline: none;
+      appearance: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    select:focus, input[type="number"]:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-dim);
+    }
+
+    select option { background: var(--bg-panel); }
+
+    .select-wrap { position: relative; }
+    .select-wrap::after {
+      content: '▾';
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-2);
+      pointer-events: none;
+      font-size: 12px;
+    }
+
+    /* ── ATTACK TYPE CHIPS ── */
+    .attack-chips {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .attack-chip {
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+      background: var(--bg-panel);
+    }
+
+    .attack-chip:hover { border-color: var(--text-3); background: var(--bg-hover); }
+
+    .attack-chip.active {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+      box-shadow: 0 0 12px var(--accent-dim);
+    }
+
+    .attack-chip.disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    .chip-icon { font-size: 18px; margin-bottom: 4px; }
+    .chip-name {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.05em;
+      color: var(--text-1);
+    }
+    .chip-desc {
+      font-size: 10px;
+      color: var(--text-3);
+      margin-top: 2px;
+    }
+
+    /* ── BUTTONS ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 10px 18px;
+      border-radius: 6px;
+      border: 1px solid transparent;
+      font-family: var(--mono);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-transform: uppercase;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #000;
+      border-color: var(--accent);
+      box-shadow: 0 0 20px var(--accent-dim);
+    }
+    .btn-primary:hover:not(:disabled) {
+      box-shadow: 0 0 30px var(--accent);
+      filter: brightness(1.1);
+    }
+    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-2);
+      border-color: var(--border);
+    }
+    .btn-ghost:hover { border-color: var(--text-2); color: var(--text-1); }
+
+    .btn-danger {
+      background: var(--danger-dim);
+      color: var(--danger);
+      border-color: var(--danger);
+    }
+    .btn-danger:hover { background: var(--danger); color: #fff; }
+
+    .btn-success {
+      background: var(--success-dim);
+      color: var(--success);
+      border-color: var(--success);
+    }
+    .btn-success:hover { background: var(--success); color: #000; }
+
+    .btn-full { width: 100%; }
+
+    /* ── PROGRESS ── */
+    #section-running {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 48px 24px;
+    }
+
+    .progress-ring-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .progress-ring-container {
+      position: relative;
+      width: 140px;
+      height: 140px;
+    }
+
+    .progress-ring {
+      transform: rotate(-90deg);
+    }
+
+    .progress-ring-bg {
+      fill: none;
+      stroke: var(--border);
+      stroke-width: 4;
+    }
+
+    .progress-ring-fill {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 4;
+      stroke-linecap: round;
+      stroke-dasharray: 345;
+      stroke-dashoffset: 345;
+      transition: stroke-dashoffset 1s linear;
+      filter: drop-shadow(0 0 6px var(--accent));
+    }
+
+    .progress-center {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+    }
+
+    .progress-time {
+      font-family: var(--mono);
+      font-size: 26px;
+      color: var(--accent);
+    }
+
+    .progress-label {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text-3);
+      letter-spacing: 0.1em;
+    }
+
+    .running-info {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--text-2);
+      letter-spacing: 0.08em;
+    }
+
+    /* ── RESULT ── */
+    #section-result { grid-column: 1 / -1; }
+
+    .result-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .result-status-badge {
+      font-family: var(--mono);
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 4px;
+      border: 1px solid;
+      letter-spacing: 0.1em;
+    }
+
+    .result-status-badge.finished { color: var(--success); border-color: var(--success); background: var(--success-dim); }
+    .result-status-badge.timeout  { color: var(--warn);    border-color: var(--warn);    background: var(--warn-dim); }
+
+    .result-type {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--accent);
+    }
+
+    .result-section-title {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      color: var(--text-3);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      margin-top: 16px;
+    }
+
+    .data-row {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 8px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+      align-items: center;
+    }
+
+    .data-key {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-2);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .data-val {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--text-1);
+      word-break: break-all;
+    }
+
+    .hashcat-block {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 6px;
+      padding: 14px;
+      margin-top: 12px;
+      position: relative;
+    }
+
+    .hashcat-block pre {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--accent);
+      word-break: break-all;
+      white-space: pre-wrap;
+    }
+
+    .copy-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: var(--bg-hover);
+      border: 1px solid var(--border);
+      color: var(--text-2);
+      font-family: var(--mono);
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .copy-btn:hover { color: var(--text-1); border-color: var(--text-2); }
+    .copy-btn.copied { color: var(--success); border-color: var(--success); }
+
+    .download-btns {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .pcap-hex {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 14px;
+      margin-top: 12px;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-2);
+      word-break: break-all;
+      white-space: pre-wrap;
+      max-height: 200px;
+      overflow-y: auto;
+      line-height: 1.7;
+    }
+
+    /* ── INFO PANEL ── */
+    .info-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+    }
+    .info-item:last-child { border-bottom: none; }
+    .info-key { color: var(--text-2); }
+    .info-val { font-family: var(--mono); color: var(--text-1); }
+    .info-val.accent { color: var(--accent); }
+
+    /* ── ERROR TOAST ── */
+    #toast-area {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .toast {
+      padding: 12px 16px;
+      border-radius: 8px;
+      background: var(--bg-card);
+      border: 1px solid var(--danger);
+      color: var(--danger);
+      font-family: var(--mono);
+      font-size: 12px;
+      max-width: 320px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      animation: slideIn 0.3s ease;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to   { transform: translateX(0);    opacity: 1; }
+    }
+
+    /* ── SECTION VISIBILITY ── */
+    .section { display: none; }
+    .section.active { display: block; }
+
+    #section-config { display: block; }
+    #section-config.hidden { display: none; }
+
+    /* ── TIMEOUT INPUT HINT ── */
+    .input-hint {
+      font-size: 10px;
+      color: var(--text-3);
+      margin-top: 4px;
+      font-family: var(--mono);
+    }
+
+    /* ── AP SELECTED INFO ── */
+    .selected-ap-display {
+      background: var(--bg-panel);
+      border: 1px solid var(--accent);
+      border-radius: 6px;
+      padding: 10px 14px;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .selected-ap-display.show { display: block; }
+    .selected-ap-display .label { font-family: var(--mono); font-size: 10px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px; }
+    .selected-ap-display .value { font-family: var(--mono); font-size: 13px; color: var(--accent); }
+
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="14" cy="14" r="13" stroke="#00e5ff" stroke-width="1.5" opacity="0.3"/>
+        <circle cx="14" cy="14" r="9"  stroke="#00e5ff" stroke-width="1.5" opacity="0.5"/>
+        <circle cx="14" cy="14" r="5"  stroke="#00e5ff" stroke-width="1.5"/>
+        <circle cx="14" cy="14" r="2"  fill="#00e5ff"/>
+      </svg>
+    </div>
+    <span class="logo-text">ESP32 <span>// WiFi PenTest</span></span>
+  </div>
+  <div id="status-badge" class="ready"><div class="pulse"></div><span id="status-text">READY</span></div>
+</header>
+
+<!-- MAIN -->
+<main>
+
+  <!-- LEFT: AP Scan + Config -->
+  <div>
+
+    <!-- AP LIST -->
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-header">
+        <span class="card-title">Access Points</span>
+        <button class="btn btn-ghost" onclick="refreshAps()" id="refresh-btn" style="padding:5px 12px;font-size:11px">⟳ Scan</button>
+      </div>
+      <div class="col-header">
+        <span>SSID</span>
+        <span>BSSID</span>
+        <span>RSSI</span>
+      </div>
+      <ul id="ap-list">
+        <li class="ap-loading"><div class="spinner"></div>Scanning nearby networks...</li>
+      </ul>
+    </div>
+
+    <!-- CONFIG -->
+    <div class="card" id="section-config">
+      <div class="card-header">
+        <span class="card-title">Attack Configuration</span>
+      </div>
+      <div class="card-body">
+
+        <!-- Selected target display -->
+        <div id="selected-ap-display" class="selected-ap-display">
+          <div class="label">Selected Target</div>
+          <div class="value" id="selected-ap-name">—</div>
+        </div>
+
+        <!-- Attack Type Chips -->
+        <div style="margin-bottom:8px"><label>Attack Type</label></div>
+        <div class="attack-chips">
+          <div class="attack-chip disabled" data-type="0" onclick="selectAttackType(0)">
+            <div class="chip-icon">👁</div>
+            <div class="chip-name">PASSIVE</div>
+            <div class="chip-desc">Not implemented</div>
+          </div>
+          <div class="attack-chip" data-type="1" onclick="selectAttackType(1)">
+            <div class="chip-icon">🤝</div>
+            <div class="chip-name">HANDSHAKE</div>
+            <div class="chip-desc">WPA/WPA2 capture</div>
+          </div>
+          <div class="attack-chip active" data-type="2" onclick="selectAttackType(2)">
+            <div class="chip-icon">🔑</div>
+            <div class="chip-name">PMKID</div>
+            <div class="chip-desc">Clientless attack</div>
+          </div>
+          <div class="attack-chip" data-type="3" onclick="selectAttackType(3)">
+            <div class="chip-icon">⚡</div>
+            <div class="chip-name">DoS</div>
+            <div class="chip-desc">Deauth flood</div>
+          </div>
+        </div>
+
+        <!-- Method -->
+        <div class="form-group">
+          <label for="attack_method">Method</label>
+          <div class="select-wrap">
+            <select id="attack_method" disabled>
+              <option value="" selected disabled hidden>NOT AVAILABLE</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Timeout -->
+        <div class="form-group">
+          <label for="attack_timeout">Timeout (seconds)</label>
+          <input type="number" id="attack_timeout" min="0" max="255" value="5" required/>
+          <div class="input-hint">0 = unlimited · max 255s</div>
+        </div>
+
+        <button class="btn btn-primary btn-full" id="attack-btn" onclick="runAttack()" disabled>
+          ▶ LAUNCH ATTACK
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT: Info Panel -->
+  <div>
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-header">
+        <span class="card-title">Device Info</span>
+      </div>
+      <div class="card-body">
+        <div class="info-item">
+          <span class="info-key">Device</span>
+          <span class="info-val accent">ESP32</span>
+        </div>
+        <div class="info-item">
+          <span class="info-key">AP IP</span>
+          <span class="info-val">192.168.4.1</span>
+        </div>
+        <div class="info-item">
+          <span class="info-key">Firmware</span>
+          <span class="info-val">risinek / v1.0</span>
+        </div>
+        <div class="info-item">
+          <span class="info-key">Interface</span>
+          <span class="info-val accent">v2.0-TM26</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Attack Reference</span>
+      </div>
+      <div class="card-body">
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div>
+            <div style="font-family:var(--mono);font-size:11px;color:var(--accent);margin-bottom:4px">PMKID</div>
+            <div style="font-size:12px;color:var(--text-2);line-height:1.5">Clientless — no deauth needed. Grabs PMKID from AP beacon frames.</div>
+          </div>
+          <div>
+            <div style="font-family:var(--mono);font-size:11px;color:var(--accent);margin-bottom:4px">HANDSHAKE</div>
+            <div style="font-size:12px;color:var(--text-2);line-height:1.5">Captures 4-way WPA handshake. Deauths existing clients to force reconnect.</div>
+          </div>
+          <div>
+            <div style="font-family:var(--mono);font-size:11px;color:var(--danger);margin-bottom:4px">DoS</div>
+            <div style="font-size:12px;color:var(--text-2);line-height:1.5">Continuous deauth flood. Disrupts all client connections on target AP.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RUNNING SECTION (spans full width) -->
+  <div class="section" id="section-running" style="grid-column:1/-1">
+    <div class="card">
+      <div class="card-body" style="padding:40px">
+        <div class="progress-ring-wrap">
+          <div class="progress-ring-container">
+            <svg class="progress-ring" width="140" height="140" viewBox="0 0 140 140">
+              <circle class="progress-ring-bg" cx="70" cy="70" r="55"/>
+              <circle class="progress-ring-fill" id="ring-fill" cx="70" cy="70" r="55"/>
+            </svg>
+            <div class="progress-center">
+              <div class="progress-time" id="running-progress">0</div>
+              <div class="progress-label">SECONDS</div>
+            </div>
+          </div>
+          <div class="running-info" id="running-info">ATTACK IN PROGRESS...</div>
+          <button class="btn btn-danger" onclick="resetAttack()">✕ ABORT</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULT SECTION (spans full width) -->
+  <div class="section" id="section-result" style="grid-column:1/-1">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Attack Result</span>
+        <button class="btn btn-ghost" onclick="resetAttack()" style="padding:5px 12px;font-size:11px">← New Attack</button>
+      </div>
+      <div class="card-body" id="result-content">
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- TOAST AREA -->
+<div id="toast-area"></div>
+
+<script>
+// ── ENUMS ──────────────────────────────────────────────────
+const AttackState = { READY: 0, RUNNING: 1, FINISHED: 2, TIMEOUT: 3 };
+const AttackType  = { PASSIVE: 0, HANDSHAKE: 1, PMKID: 2, DOS: 3 };
+
+const ATTACK_METHODS = {
+  [AttackType.HANDSHAKE]: ['DEAUTH_ROGUE_AP (PASSIVE)', 'DEAUTH_BROADCAST (ACTIVE)', 'CAPTURE_ONLY (PASSIVE)'],
+  [AttackType.DOS]:       ['DEAUTH_ROGUE_AP (PASSIVE)', 'DEAUTH_BROADCAST (ACTIVE)', 'DEAUTH_COMBINE_ALL'],
+};
+
+const DEFAULT_TIMEOUTS = { [AttackType.HANDSHAKE]: 60, [AttackType.PMKID]: 5, [AttackType.DOS]: 120 };
+
+// ── STATE ──────────────────────────────────────────────────
+let selectedApIndex = -1;
+let selectedApSSID  = '';
+let currentAttackType = 2;
+let attackTimeout = 0;
+let timeElapsed   = 0;
+let runningPoll   = null;
+let statusPollInterval = 1000;
+let ringCircumference = 2 * Math.PI * 55; // ~345.6
+
+// ── INIT ──────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('ring-fill').style.strokeDasharray = ringCircumference;
+  document.getElementById('ring-fill').style.strokeDashoffset = ringCircumference;
+  selectAttackType(2, true);
+  getStatus();
+  refreshAps();
+});
+
+// ── STATUS POLLING ─────────────────────────────────────────
+function getStatus() {
+  const req = new XMLHttpRequest();
+  req.responseType = 'arraybuffer';
+  req.onload = function() {
+    if (!req.response) return;
+    const buf  = req.response;
+    const u8   = new Uint8Array(buf);
+    const u16  = new Uint16Array(buf);
+    const state   = u8[0];
+    const type    = u8[1];
+    const csize   = u16[1];
+    const content = new Uint8Array(buf, 4);
+
+    updateStatusBadge(state);
+
+    switch (state) {
+      case AttackState.READY:
+        showSection('config');
+        break;
+      case AttackState.RUNNING:
+        showSection('running');
+        setTimeout(getStatus, statusPollInterval);
+        break;
+      case AttackState.FINISHED:
+        showResult('FINISHED', type, csize, content);
+        break;
+      case AttackState.TIMEOUT:
+        showResult('TIMEOUT', type, csize, content);
+        break;
+    }
+  };
+  req.onerror = () => {
+    showToast('Cannot reach ESP32. Check you are connected to management AP.');
+    setTimeout(getStatus, 3000);
+  };
+  req.ontimeout = () => setTimeout(getStatus, 3000);
+  req.open('GET', 'http://192.168.4.1/status', true);
+  req.send();
+}
+
+// ── AP LIST ───────────────────────────────────────────────
+function refreshAps() {
+  const list = document.getElementById('ap-list');
+  list.innerHTML = '<li class="ap-loading"><div class="spinner"></div>Scanning...</li>';
+  document.getElementById('refresh-btn').disabled = true;
+
+  const req = new XMLHttpRequest();
+  req.responseType = 'arraybuffer';
+  req.onload = function() {
+    document.getElementById('refresh-btn').disabled = false;
+    list.innerHTML = '';
+    if (!req.response || req.response.byteLength === 0) {
+      list.innerHTML = '<li class="ap-empty">No access points found</li>';
+      return;
+    }
+    const bytes = new Uint8Array(req.response);
+    const count = Math.floor(bytes.byteLength / 40);
+    if (count === 0) {
+      list.innerHTML = '<li class="ap-empty">No access points found</li>';
+      return;
+    }
+    for (let i = 0; i < count; i++) {
+      const offset = i * 40;
+      const ssid   = new TextDecoder('utf-8').decode(bytes.subarray(offset, offset + 32)).replace(/\0/g, '');
+      let bssid = '';
+      for (let j = 0; j < 6; j++) bssid += u8hex(bytes[offset + 33 + j]) + (j < 5 ? ':' : '');
+      const rssi = bytes[offset + 39] - 255;
+
+      const li   = document.createElement('li');
+      li.className = 'ap-row';
+      li.dataset.index = i;
+      li.dataset.ssid  = ssid;
+      li.onclick = () => selectAp(li, i, ssid);
+
+      const pct   = Math.max(0, Math.min(100, (rssi + 100) * 2));
+      const color = rssi >= -60 ? 'var(--success)' : rssi >= -75 ? 'var(--warn)' : 'var(--danger)';
+
+      li.innerHTML = `
+        <span class="ap-ssid">${escHtml(ssid) || '<i style="color:var(--text-3)">[Hidden]</i>'}</span>
+        <span class="ap-bssid">${bssid}</span>
+        <span class="rssi-bar-wrap">
+          <span class="rssi-bar"><span class="rssi-fill" style="width:${pct}%;background:${color}"></span></span>
+          <span class="rssi-val">${rssi}</span>
+        </span>`;
+      list.appendChild(li);
+    }
+  };
+  req.onerror = () => {
+    document.getElementById('refresh-btn').disabled = false;
+    list.innerHTML = '<li class="ap-empty">Scan failed — check connection</li>';
+  };
+  req.open('GET', 'http://192.168.4.1/ap-list', true);
+  req.send();
+}
+
+function selectAp(el, index, ssid) {
+  document.querySelectorAll('.ap-row').forEach(r => r.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedApIndex = index;
+  selectedApSSID  = ssid;
+
+  const disp = document.getElementById('selected-ap-display');
+  disp.classList.add('show');
+  document.getElementById('selected-ap-name').textContent = ssid || '[Hidden Network]';
+  document.getElementById('attack-btn').disabled = false;
+}
+
+// ── ATTACK TYPE ───────────────────────────────────────────
+function selectAttackType(type, init) {
+  if (type === AttackType.PASSIVE) return; // disabled
+
+  currentAttackType = type;
+
+  document.querySelectorAll('.attack-chip').forEach(c => {
+    c.classList.toggle('active', parseInt(c.dataset.type) === type);
+  });
+
+  // Method select
+  const sel = document.getElementById('attack_method');
+  sel.innerHTML = '';
+  const methods = ATTACK_METHODS[type];
+  if (methods) {
+    sel.removeAttribute('disabled');
+    methods.forEach((m, i) => {
+      const opt = new Option(m, i, i === 0, i === 0);
+      sel.add(opt);
+    });
+  } else {
+    sel.setAttribute('disabled', '');
+    sel.innerHTML = '<option value="" selected disabled hidden>NOT AVAILABLE</option>';
+  }
+
+  // Timeout
+  if (!init) {
+    document.getElementById('attack_timeout').value = DEFAULT_TIMEOUTS[type] ?? 30;
+  }
+}
+
+// ── RUN ATTACK ────────────────────────────────────────────
+function runAttack() {
+  if (selectedApIndex === -1) {
+    showToast('Select a target network first');
+    return;
+  }
+
+  const timeout = parseInt(document.getElementById('attack_timeout').value);
+  const method  = parseInt(document.getElementById('attack_method').value) || 0;
+
+  attackTimeout = timeout;
+  timeElapsed   = 0;
+
+  showSection('running');
+  updateStatusBadge(AttackState.RUNNING);
+  document.getElementById('running-info').textContent =
+    `Attacking: ${selectedApSSID || 'Unknown'} · ${typeLabel(currentAttackType)}`;
+
+  if (runningPoll) clearInterval(runningPoll);
+  runningPoll = setInterval(tickProgress, 1000);
+  updateRing(0);
+
+  const buf  = new ArrayBuffer(4);
+  const u8   = new Uint8Array(buf);
+  u8[0] = selectedApIndex;
+  u8[1] = currentAttackType;
+  u8[2] = method;
+  u8[3] = timeout;
+
+  const req = new XMLHttpRequest();
+  req.open('POST', 'http://192.168.4.1/run-attack', true);
+  req.send(buf);
+
+  getStatus();
+}
+
+function tickProgress() {
+  timeElapsed++;
+  document.getElementById('running-progress').textContent = timeElapsed;
+  if (attackTimeout > 0) {
+    const pct = Math.min(timeElapsed / attackTimeout, 1);
+    updateRing(pct);
+    if (timeElapsed >= attackTimeout) {
+      clearInterval(runningPoll);
+    }
+  }
+}
+
+function updateRing(pct) {
+  const fill = document.getElementById('ring-fill');
+  fill.style.strokeDashoffset = ringCircumference * (1 - pct);
+}
+
+// ── RESET ─────────────────────────────────────────────────
+function resetAttack() {
+  if (runningPoll) clearInterval(runningPoll);
+  timeElapsed = 0;
+  updateRing(0);
+  showSection('config');
+  updateStatusBadge(AttackState.READY);
+  refreshAps();
+
+  const req = new XMLHttpRequest();
+  req.open('HEAD', 'http://192.168.4.1/reset', true);
+  req.send();
+}
+
+// ── RESULTS ───────────────────────────────────────────────
+function showResult(status, attackType, contentSize, content) {
+  if (runningPoll) clearInterval(runningPoll);
+  showSection('result');
+  updateStatusBadge(status === 'FINISHED' ? AttackState.FINISHED : AttackState.TIMEOUT);
+
+  const badgeCls = status === 'FINISHED' ? 'finished' : 'timeout';
+  let html = `
+    <div class="result-header">
+      <span class="result-status-badge ${badgeCls}">${status}</span>
+      <span class="result-type">${typeLabel(attackType)}</span>
+    </div>
+  `;
+
+  switch (attackType) {
+    case AttackType.PMKID:    html += resultPmkid(content, contentSize);    break;
+    case AttackType.HANDSHAKE:html += resultHandshake(content, contentSize); break;
+    case AttackType.DOS:      html += resultDos();                           break;
+    default:                  html += '<p style="color:var(--text-2)">No result data available.</p>';
+  }
+
+  document.getElementById('result-content').innerHTML = html;
+}
+
+function resultPmkid(content, size) {
+  let idx = 0;
+  let macAp = '', macSta = '', ssidHex = '', ssidText = '';
+
+  for (let i = 0; i < 6; i++) macAp  += u8hex(content[idx++]);
+  for (let i = 0; i < 6; i++) macSta += u8hex(content[idx++]);
+
+  const ssidLen = content[idx++];
+  for (let i = 0; i < ssidLen; i++) {
+    ssidHex += u8hex(content[idx + i]);
+    ssidText += String.fromCharCode(content[idx + i]);
+  }
+  idx += ssidLen;
+
+  let pmkids = [];
+  let cur = '';
+  for (let i = 0; i < size - idx; i++) {
+    cur += u8hex(content[idx + i]);
+    if ((i + 1) % 16 === 0) { pmkids.push(cur); cur = ''; }
+  }
+  if (cur) pmkids.push(cur);
+
+  const hashcatStr = `${pmkids[0]}*${macAp}*${macSta}*${ssidHex}`;
+
+  return `
+    <div class="result-section-title">Captured Data</div>
+    <div class="data-row"><span class="data-key">MAC AP</span><span class="data-val">${fmtMac(macAp)}</span></div>
+    <div class="data-row"><span class="data-key">MAC Station</span><span class="data-val">${fmtMac(macSta)}</span></div>
+    <div class="data-row"><span class="data-key">SSID</span><span class="data-val">${escHtml(ssidText)} <span style="color:var(--text-3)">(${ssidHex})</span></span></div>
+    <div class="data-row"><span class="data-key">PMKIDs</span><span class="data-val">${pmkids.length}</span></div>
+    ${pmkids.map((p, i) => `<div class="data-row"><span class="data-key">PMKID #${i}</span><span class="data-val" style="color:var(--accent)">${p}</span></div>`).join('')}
+    <div class="result-section-title">Hashcat Format</div>
+    <div class="hashcat-block">
+      <button class="copy-btn" onclick="copyToClip(this,'${hashcatStr}')">COPY</button>
+      <pre>${hashcatStr}</pre>
+    </div>
+    <div style="margin-top:8px;font-family:var(--mono);font-size:10px;color:var(--text-3)">
+      hashcat -m 22000 hash.txt wordlist.txt
+    </div>`;
+}
+
+function resultHandshake(content, size) {
+  let hex = '';
+  for (let i = 0; i < size; i++) {
+    hex += u8hex(content[i]);
+    if ((i + 1) % 32 === 0) hex += '\n';
+  }
+
+  return `
+    <div class="result-section-title">Captured Handshake</div>
+    <div class="download-btns">
+      <a class="btn btn-success" href="capture.pcap" download>↓ Download PCAP</a>
+      <a class="btn btn-ghost" href="capture.hccapx" download>↓ Download HCCAPX</a>
+    </div>
+    <div class="result-section-title">Raw Hex Preview</div>
+    <div class="pcap-hex">${hex}</div>
+    <div style="margin-top:8px;font-family:var(--mono);font-size:10px;color:var(--text-3)">
+      hashcat -m 22000 capture.hccapx wordlist.txt
+    </div>`;
+}
+
+function resultDos() {
+  return `
+    <div style="text-align:center;padding:24px">
+      <div style="font-size:40px;margin-bottom:12px">⚡</div>
+      <div style="font-family:var(--mono);color:var(--accent);font-size:14px;margin-bottom:8px">DoS ATTACK COMPLETED</div>
+      <div style="color:var(--text-2);font-size:12px">Deauthentication flood finished or timed out.</div>
+    </div>`;
+}
+
+// ── UI HELPERS ────────────────────────────────────────────
+function showSection(name) {
+  document.getElementById('section-config').style.display  = (name === 'config')  ? 'block' : 'none';
+  document.getElementById('section-running').style.display = (name === 'running') ? 'block' : 'none';
+  document.getElementById('section-result').style.display  = (name === 'result')  ? 'block' : 'none';
+
+  // AP list card always visible
+  if (name === 'running' || name === 'result') {
+    document.querySelector('.card:first-child') && null; // keep visible
+  }
+}
+
+function updateStatusBadge(state) {
+  const badge = document.getElementById('status-badge');
+  const text  = document.getElementById('status-text');
+  badge.className = '';
+  const map = {
+    [AttackState.READY]:    ['ready',    'READY'],
+    [AttackState.RUNNING]:  ['running',  'RUNNING'],
+    [AttackState.FINISHED]: ['finished', 'FINISHED'],
+    [AttackState.TIMEOUT]:  ['timeout',  'TIMEOUT'],
+    'FINISHED':             ['finished', 'FINISHED'],
+    'TIMEOUT':              ['timeout',  'TIMEOUT'],
+  };
+  const [cls, label] = map[state] || ['error', 'ERROR'];
+  badge.className = cls;
+  text.textContent = label;
+  badge.innerHTML = `<div class="pulse"></div><span>${label}</span>`;
+}
+
+function showToast(msg, duration = 4000) {
+  const area  = document.getElementById('toast-area');
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.innerHTML = `⚠ ${escHtml(msg)}`;
+  area.appendChild(toast);
+  setTimeout(() => toast.remove(), duration);
+}
+
+function copyToClip(btn, text) {
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'COPIED!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'COPY'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+// ── UTIL ──────────────────────────────────────────────────
+function u8hex(v)    { return ('00' + v.toString(16)).slice(-2); }
+function escHtml(s)  { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+function fmtMac(h)   { return h.match(/.{2}/g).join(':'); }
+function typeLabel(t) {
+  return ['PASSIVE', 'HANDSHAKE', 'PMKID', 'DoS'][t] ?? 'UNKNOWN';
+}
+</script>
+</body>
+</html>
