@@ -1,2 +1,10 @@
-idf_component_register(SRCS "attack_dos.c" "attack_method.c" "main.c" "attack_handshake.c" "attack_pmkid.c" "attack.c"
-                    INCLUDE_DIRS .)
+idf_component_register(
+    SRCS
+        "main.cpp"
+        "attack.cpp"
+        "attack_dos.cpp"
+        "attack_handshake.cpp"
+        "attack_method.cpp"
+        "attack_pmkid.cpp"
+    INCLUDE_DIRS "."
+)

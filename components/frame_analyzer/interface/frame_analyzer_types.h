@@ -1,30 +1,24 @@
 /**
  * @file frame_analyzer_types.h
- * @author risinek (risinek@gmail.com)
- * @date 2021-04-05
- * @copyright Copyright (c) 2021
- * 
- * @brief Provides structures and constants based on various standards like 802.11, 802.1X etc...
+ * @brief 802.11 / 802.1X frame type definitions
+ * @note Converted to C++ — extern "C" guard added for ESP-IDF C ABI compatibility
  */
-#ifndef FRAME_ANALYZER_TYPES_H
-#define FRAME_ANALYZER_TYPES_H
+#pragma once
 
-#include <stdint.h>
+#include <cstdint>
 
-/**
- * @see Ref: 802.1X-2020 [11.1.4]
- */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define ETHER_TYPE_EAPOL 0x888e
 
-/**
- * @see Ref: 802.1X-2020 [11.3.2]
- */
 typedef enum {
     EAPOL_EAP_PACKET = 0,
-	EAPOL_START,
-	EAPOL_LOGOFF,
-	EAPOL_KEY,
-	EAPOL_ENCAPSULATED_ASF_ALERT,
+    EAPOL_START,
+    EAPOL_LOGOFF,
+    EAPOL_KEY,
+    EAPOL_ENCAPSULATED_ASF_ALERT,
     EAPOL_MKA,
     EAPOL_ANNOUNCEMENT_GENERIC,
     EAPOL_ANNOUNCEMENT_SPECIFIC,
@@ -66,29 +60,17 @@ typedef struct {
     uint8_t encapsulation[3];
 } llc_snap_header_t;
 
-/**
- * Size: 4 bytes
- * @see Ref: 802.1X-2020 [11.3]
- */
 typedef struct {
-	uint8_t version;
-	uint8_t packet_type;
-	uint16_t packet_body_length;
+    uint8_t version;
+    uint8_t packet_type;
+    uint16_t packet_body_length;
 } eapol_packet_header_t;
 
-/**
- * @see Ref: 802.1X-2020 [11.3], 802.11-2016 [12.7.2]
- */
 typedef struct {
-	eapol_packet_header_t header;
-	uint8_t packet_body[];
+    eapol_packet_header_t header;
+    uint8_t packet_body[];
 } eapol_packet_t;
 
-/**
- * Size: 2 bytes
- * @note unnamed fields are "reserved"
- * @see Ref: 802.11-2016 [12.7.2]
- */
 typedef struct {
     uint8_t key_descriptor_version:3;
     uint8_t key_type:1;
@@ -104,10 +86,6 @@ typedef struct {
     uint8_t :2;
 } key_information_t;
 
-/**
- * @todo MIC lenght is dependent on 802.11-2016 [12.7.3] - key_infromation_t.descrptor_version
- * @see Ref: 802.11-2016 [12.7.2]
- */
 typedef struct __attribute__((__packed__)) {
     uint8_t descriptor_type;
     key_information_t key_information;
@@ -122,25 +100,10 @@ typedef struct __attribute__((__packed__)) {
     uint8_t key_data[];
 } eapol_key_packet_t;
 
-/**
- * @see Ref: 802.11-2016 [12.7.2, Table 12-6]
- */
-#define KEY_DATA_TYPE 0xdd
-
-/**
- * @note Needs trailing byte due to casting to uint32_t and converting from netlong
- * @see Ref: 802.11-2016 [12.7.2, Table 12-6]
- */
-#define KEY_DATA_OUI_IEEE80211 0x00fac00
-
-/**
- * @see Ref: 802.11-2016 [12.7.2, Table 12-6]
- */
+#define KEY_DATA_TYPE               0xdd
+#define KEY_DATA_OUI_IEEE80211      0x00fac00
 #define KEY_DATA_DATA_TYPE_PMKID_KDE 4
 
-/**
- * @see Ref: 802.11-2016 [12.7.2]
- */
 typedef struct __attribute__((__packed__)) {
     uint8_t type;
     uint8_t length;
@@ -149,12 +112,11 @@ typedef struct __attribute__((__packed__)) {
     uint8_t data[];
 } key_data_field_t;
 
-/**
- * @brief linked list of PMKIDs
- */
 typedef struct pmkid_item {
     uint8_t pmkid[16];
     struct pmkid_item *next;
 } pmkid_item_t;
 
+#ifdef __cplusplus
+}
 #endif
