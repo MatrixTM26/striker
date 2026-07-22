@@ -1,0 +1,37 @@
+menu "NetStrike32 Configuration"
+
+    menu "Management Access Point"
+
+        config MGMT_AP_SSID
+            string "Management AP SSID"
+            default "NetStrike32"
+            help
+                SSID of the management access point used for web interface access.
+
+        config MGMT_AP_PASSWORD
+            string "Management AP Password"
+            default "Strike32!"
+            help
+                WPA2 password for the management access point. Minimum 8 characters.
+
+        config MGMT_AP_MAX_CONNECTIONS
+            int "Max simultaneous connections"
+            default 1
+            range 1 4
+            help
+                Maximum number of clients allowed to connect to the management AP.
+
+    endmenu
+
+    menu "Network Scanner"
+
+        config SCAN_MAX_AP
+            int "Maximum APs to scan"
+            default 20
+            range 5 50
+            help
+                Maximum number of access points stored in a single scan pass.
+
+    endmenu
+
+endmenu
