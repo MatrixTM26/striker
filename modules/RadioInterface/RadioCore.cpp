@@ -42,10 +42,10 @@ namespace RadioInterface {
 
     void StartManagementAp() {
         wifi_config_t Cfg = {};
-        memcpy(Cfg.ap.ssid,     CONFIG_MGMT_AP_SSID,     strlen(CONFIG_MGMT_AP_SSID));
-        memcpy(Cfg.ap.password, CONFIG_MGMT_AP_PASSWORD,  strlen(CONFIG_MGMT_AP_PASSWORD));
-        Cfg.ap.ssid_len       = strlen(CONFIG_MGMT_AP_SSID);
-        Cfg.ap.max_connection = CONFIG_MGMT_AP_MAX_CONNECTIONS;
+        memcpy(Cfg.ap.ssid,     CONFIG_CONSOLE_SSID,     strlen(CONFIG_CONSOLE_SSID));
+        memcpy(Cfg.ap.password, CONFIG_CONSOLE_KEY,  strlen(CONFIG_CONSOLE_KEY));
+        Cfg.ap.ssid_len       = strlen(CONFIG_CONSOLE_SSID);
+        Cfg.ap.max_connection = CONFIG_CONSOLE_CLIENT_LIMIT;
         Cfg.ap.authmode       = WIFI_AUTH_WPA2_PSK;
         StartAccessPoint(&Cfg);
     }

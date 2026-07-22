@@ -9,7 +9,7 @@ static NetworkList Catalog;
 
 namespace RadioInterface {
     void ScanNetworks() {
-        Catalog.Count = CONFIG_SCAN_MAX_AP;
+        Catalog.Count = CONFIG_RADAR_MAX_TARGETS;
         wifi_scan_config_t Cfg = {
             .ssid = nullptr, .bssid = nullptr,
             .channel = 0, .scan_type = WIFI_SCAN_TYPE_ACTIVE

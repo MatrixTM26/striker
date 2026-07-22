@@ -14,7 +14,7 @@ enum {
 
 typedef struct {
     uint16_t Count;
-    wifi_ap_record_t Records[CONFIG_SCAN_MAX_AP];
+    wifi_ap_record_t Records[CONFIG_RADAR_MAX_TARGETS];
 } NetworkList;
 
 namespace RadioInterface {
