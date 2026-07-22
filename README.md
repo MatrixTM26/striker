@@ -174,7 +174,7 @@ Served from `http://192.168.4.1` while connected to the management AP.
 
 ## Credit
 - Author: [@MatrixTM26](https://github.com/MatrixTM26)
-- Co-Author: [@SpectreX26999](https://github.com/SpectreX2999)
+- Co-Author: [@SpectreX26999](https://github.com/SpectreX26999)
 
 > [!CAUTION]
 > For use only on networks you own or have explicit written authorization to test. The author is not responsible for any unauthorized or unlawful use of this tool.
