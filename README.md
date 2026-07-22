@@ -138,43 +138,6 @@ hashcat -m 22000 hash.hc22000 wordlist.txt
 
 ---
 
-## Project Structure
-
-```
-Striker/
-├── core/
-│   ├── Main.cpp                  Boot sequence
-│   ├── Kconfig.projbuild         All menuconfig options
-│   └── CMakeLists.txt
-│
-├── modules/
-│   ├── RadioInterface/           WiFi driver — AP, STA, sniffer, scanner
-│   ├── FrameParser/              802.11 and EAPoL frame parsing
-│   ├── FrameInjector/            Raw deauthentication frame injection
-│   ├── CaptureWriter/            PCAP and HCCAPX file serialization
-│   ├── PacketEngine/             Attack orchestration and state machine
-│   └── HttpServer/               REST API and embedded web interface
-│
-├── CMakeLists.txt
-└── sdkconfig.defaults
-```
-
-### Module Dependency Graph
-
-```
-core
-├── PacketEngine
-│   ├── RadioInterface
-│   ├── FrameParser → RadioInterface
-│   ├── CaptureWriter → FrameParser
-│   └── FrameInjector
-└── HttpServer
-    ├── PacketEngine
-    └── CaptureWriter
-```
-
----
-
 ## REST API
 
 Served from `http://192.168.4.1` while connected to the management AP.
@@ -209,6 +172,9 @@ Served from `http://192.168.4.1` while connected to the management AP.
 
 ---
 
-## Legal
+## Credit
+- Author: [@MatrixTM26](https://github.com/MatrixTM26)
+- Co-Author: [@SpectreX26999](https://github.com/SpectreX2999)
 
-For use only on networks you own or have explicit written authorization to test. The author is not responsible for any unauthorized or unlawful use of this tool.
+> [!CAUTION]
+> For use only on networks you own or have explicit written authorization to test. The author is not responsible for any unauthorized or unlawful use of this tool.
