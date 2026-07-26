@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Striker — Web Flasher</title>
+  <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Inter:wght@300;400;500;600&display=swap');
+
+    :root {
+      --bg:      #0a0c10;
+      --panel:   #0f1117;
+      --card:    #13161f;
+      --border:  #1e2538;
+      --accent:  #00e5ff;
+      --adim:    #00e5ff18;
+      --danger:  #ff3b6b;
+      --success: #10d97e;
+      --t1:      #e8eaf0;
+      --t2:      #8892a4;
+      --t3:      #4a5568;
+      --mono:    'Share Tech Mono', monospace;
+      --sans:    'Inter', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--t1);
+      font-family: var(--sans);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 40px 40px;
+      opacity: 0.3;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    header {
+      position: relative;
+      z-index: 1;
+      border-bottom: 1px solid var(--border);
+      padding: 0 32px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(10,12,16,0.9);
+      backdrop-filter: blur(12px);
+    }
+
+    .logo-ring {
+      width: 26px; height: 26px;
+      border: 2px solid var(--accent);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 10px var(--adim);
+    }
+    .logo-ring::after {
+      content: '';
+      width: 8px; height: 8px;
+      background: var(--accent);
+      border-radius: 50%;
+    }
+
+    .logo-text {
+      font-family: var(--mono);
+      font-size: 14px;
+      color: var(--accent);
+      letter-spacing: 0.1em;
+    }
+
+    .logo-sub {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--t3);
+      margin-left: 4px;
+    }
+
+    .header-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .gh-link {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--t2);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: color 0.2s;
+    }
+    .gh-link:hover { color: var(--accent); }
+
+    main {
+      position: relative;
+      z-index: 1;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 24px;
+      gap: 32px;
+    }
+
+    .hero {
+      text-align: center;
+      max-width: 560px;
+    }
+
+    .hero-label {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      color: var(--accent);
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    .hero h1 {
+      font-size: 48px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--t1);
+      line-height: 1.1;
+      margin-bottom: 16px;
+    }
+
+    .hero h1 span { color: var(--accent); }
+
+    .hero p {
+      font-size: 15px;
+      color: var(--t2);
+      line-height: 1.6;
+    }
+
+    .flash-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 32px;
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .flash-card-title {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      color: var(--t3);
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .flash-card-title::before {
+      content: '';
+      width: 3px; height: 14px;
+      background: var(--accent);
+      border-radius: 2px;
+    }
+
+    .requirements {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .req-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      color: var(--t2);
+    }
+
+    .req-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      flex-shrink: 0;
+    }
+
+    esp-web-install-button {
+      width: 100%;
+    }
+
+    esp-web-install-button::part(button) {
+      width: 100%;
+      padding: 12px 20px;
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: 7px;
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      text-transform: uppercase;
+      box-shadow: 0 0 24px var(--adim);
+      transition: filter 0.2s, box-shadow 0.2s;
+    }
+
+    esp-web-install-button::part(button):hover {
+      filter: brightness(1.1);
+      box-shadow: 0 0 36px var(--accent);
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+    }
+
+    .manual-section {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .manual-title {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      color: var(--t3);
+      text-transform: uppercase;
+    }
+
+    .offset-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--mono);
+      font-size: 12px;
+    }
+
+    .offset-table th {
+      text-align: left;
+      padding: 6px 10px;
+      color: var(--t3);
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .offset-table td {
+      padding: 8px 10px;
+      color: var(--t2);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .offset-table td:last-child {
+      color: var(--accent);
+      font-size: 11px;
+    }
+
+    .offset-table tr:last-child td { border-bottom: none; }
+
+    .code-block {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 6px;
+      padding: 14px;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--t2);
+      white-space: pre;
+      overflow-x: auto;
+      line-height: 1.7;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      max-width: 480px;
+      width: 100%;
+    }
+
+    .info-item {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+    }
+
+    .info-key {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--t3);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .info-val {
+      font-family: var(--mono);
+      font-size: 14px;
+      color: var(--accent);
+    }
+
+    footer {
+      position: relative;
+      z-index: 1;
+      border-top: 1px solid var(--border);
+      padding: 20px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .footer-left {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--t3);
+    }
+
+    .footer-left a {
+      color: var(--t2);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .footer-left a:hover { color: var(--accent); }
+
+    .footer-warning {
+      font-size: 11px;
+      color: var(--t3);
+      max-width: 400px;
+      text-align: right;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 600px) {
+      .hero h1 { font-size: 32px; }
+      .info-grid { grid-template-columns: 1fr 1fr; }
+      footer { flex-direction: column; gap: 12px; }
+      .footer-warning { text-align: left; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo-ring"></div>
+  <span class="logo-text">STRIKER</span>
+  <span class="logo-sub">// ESP32 WiFi Pentest Tool</span>
+  <div class="header-right">
+    <a class="gh-link" href="https://github.com/MatrixTM26" target="_blank">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
+      </svg>
+      MatrixTM26
+    </a>
+  </div>
+</header>
+
+<main>
+
+  <div class="hero">
+    <div class="hero-label">ESP32 · WiFi Penetration Testing</div>
+    <h1>Flash <span>Striker</span><br>in seconds</h1>
+    <p>Connect your ESP32 via USB, click Install, and your device is ready. No drivers, no terminal, no setup.</p>
+  </div>
+
+  <div class="flash-card">
+    <div class="flash-card-title">One-Click Flash</div>
+
+    <div class="requirements">
+      <div class="req-item"><div class="req-dot"></div>Chrome or Edge browser (required for Web Serial)</div>
+      <div class="req-item"><div class="req-dot"></div>ESP32 connected via USB data cable</div>
+      <div class="req-item"><div class="req-dot"></div>No drivers or software installation needed</div>
+    </div>
+
+    <esp-web-install-button manifest="manifest.json">
+      <span slot="activate">⚡ Install Striker</span>
+      <span slot="unsupported">Use Chrome or Edge to flash from browser</span>
+    </esp-web-install-button>
+
+    <hr class="divider">
+
+    <div class="manual-section">
+      <div class="manual-title">Manual Flash Offsets</div>
+      <table class="offset-table">
+        <thead>
+          <tr><th>File</th><th>Offset</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>bootloader.bin</td><td>0x1000</td></tr>
+          <tr><td>partition-table.bin</td><td>0x8000</td></tr>
+          <tr><td>striker.bin</td><td>0x10000</td></tr>
+        </tbody>
+      </table>
+
+      <div class="code-block">esptool.py --chip esp32 --baud 460800 write_flash \
+  0x1000  bootloader.bin \
+  0x8000  partition-table.bin \
+  0x10000 striker.bin</div>
+    </div>
+  </div>
+
+  <div class="info-grid">
+    <div class="info-item">
+      <div class="info-key">Management AP</div>
+      <div class="info-val">NetStrike32</div>
+    </div>
+    <div class="info-item">
+      <div class="info-key">Password</div>
+      <div class="info-val">Strike32!</div>
+    </div>
+    <div class="info-item">
+      <div class="info-key">Web Interface</div>
+      <div class="info-val">192.168.4.1</div>
+    </div>
+    <div class="info-item">
+      <div class="info-key">Target</div>
+      <div class="info-val">ESP32</div>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  <div class="footer-left">
+    Built by <a href="https://github.com/MatrixTM26" target="_blank">MatrixTM26</a>
+    &nbsp;·&nbsp;
+    <a href="https://github.com/MatrixTM26/Striker" target="_blank">Source</a>
+    &nbsp;·&nbsp;
+    <a href="https://github.com/MatrixTM26/Striker/releases" target="_blank">Releases</a>
+  </div>
+  <div class="footer-warning">
+    For use only on networks you own or have explicit written authorization to test.
+  </div>
+</footer>
+
+</body>
+</html>
