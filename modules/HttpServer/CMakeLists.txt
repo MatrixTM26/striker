@@ -1,5 +1,6 @@
 idf_component_register(
     SRCS "HttpServer.cpp"
     INCLUDE_DIRS "." ".."
-    PRIV_REQUIRES RadioInterface PacketEngine CaptureWriter esp_http_server
+    REQUIRES esp_event esp_http_server
+    PRIV_REQUIRES RadioInterface PacketEngine CaptureWriter
 )
