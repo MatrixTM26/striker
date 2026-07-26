@@ -1,28 +1,32 @@
 name: Build Striker Firmware
 
-on:
+"on":
   push:
-    branches: [main, master]
+    branches:
+      - main
+      - master
   pull_request:
-    branches: [main, master]
+    branches:
+      - main
+      - master
   workflow_dispatch:
     inputs:
       console_ssid:
-        description: 'Management AP SSID'
+        description: "Management AP SSID"
         required: false
-        default: 'NetStrike32'
+        default: "NetStrike32"
       console_key:
-        description: 'Management AP Password (min 8 chars)'
+        description: "Management AP Password (min 8 chars)"
         required: false
-        default: 'Strike32!'
+        default: "Strike32!"
       console_client_limit:
-        description: 'Max concurrent clients on management AP'
+        description: "Max concurrent clients on management AP"
         required: false
-        default: '1'
+        default: "1"
       radar_max_targets:
-        description: 'Max APs per scan (5-50)'
+        description: "Max APs per scan (5-50)"
         required: false
-        default: '20'
+        default: "20"
 
 jobs:
   build:
@@ -38,7 +42,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Cache ESP-IDF
         uses: actions/cache@v4
@@ -59,7 +63,7 @@ jobs:
           fi
           ~/esp/esp-idf/install.sh esp32
 
-      - name: Apply custom sdkconfig (workflow_dispatch only)
+      - name: Apply custom sdkconfig
         if: github.event_name == 'workflow_dispatch'
         run: |
           SSID="${{ github.event.inputs.console_ssid }}"
@@ -67,12 +71,12 @@ jobs:
           LIMIT="${{ github.event.inputs.console_client_limit }}"
           RADAR="${{ github.event.inputs.radar_max_targets }}"
 
-          sed -i "s|CONFIG_CONSOLE_SSID=.*|CONFIG_CONSOLE_SSID=\"${SSID}\"|" sdkconfig.defaults
-          sed -i "s|CONFIG_CONSOLE_KEY=.*|CONFIG_CONSOLE_KEY=\"${KEY}\"|" sdkconfig.defaults
+          sed -i "s|CONFIG_CONSOLE_SSID=.*|CONFIG_CONSOLE_SSID=\"${SSID}\"|"       sdkconfig.defaults
+          sed -i "s|CONFIG_CONSOLE_KEY=.*|CONFIG_CONSOLE_KEY=\"${KEY}\"|"           sdkconfig.defaults
           sed -i "s|CONFIG_CONSOLE_CLIENT_LIMIT=.*|CONFIG_CONSOLE_CLIENT_LIMIT=${LIMIT}|" sdkconfig.defaults
           sed -i "s|CONFIG_RADAR_MAX_TARGETS=.*|CONFIG_RADAR_MAX_TARGETS=${RADAR}|" sdkconfig.defaults
 
-          echo "Applied custom config:"
+          echo "Applied config:"
           grep "CONFIG_CONSOLE\|CONFIG_RADAR" sdkconfig.defaults
 
       - name: Build firmware
@@ -86,50 +90,34 @@ jobs:
       - name: Collect firmware artifacts
         run: |
           mkdir -p firmware
-          cp build/NetStrike32.bin            firmware/striker.bin
-          cp build/bootloader/bootloader.bin  firmware/bootloader.bin
-          cp build/partition_table/partition-table.bin firmware/partition-table.bin
-          cp build/flash_args                 firmware/flash_args.txt
-
-          echo ""
-          echo "Firmware info:"
+          cp build/NetStrike32.bin                       firmware/striker.bin
+          cp build/bootloader/bootloader.bin             firmware/bootloader.bin
+          cp build/partition_table/partition-table.bin   firmware/partition-table.bin
+          cp build/flash_args                            firmware/flash_args.txt
           ls -lh firmware/
-          python3 ~/esp/esp-idf/components/esptool_py/esptool/esptool.py \
-            image_info firmware/striker.bin || true
 
-      - name: Generate flash manifest (for ESP Web Flasher)
+      - name: Generate flash manifest
         run: |
-          cat > firmware/manifest.json << MANIFEST
-          {
+          python3 - << 'PYEOF'
+          import json
+          manifest = {
             "name": "Striker",
-            "version": "${{ github.ref_name }}",
-            "home_assistant_domain": null,
-            "funding_url": "https://github.com/MatrixTM26",
-            "new_install_prompt_erase": true,
+            "new_install_prompt_erase": True,
             "builds": [
               {
                 "chipFamily": "ESP32",
                 "parts": [
-                  {
-                    "path": "bootloader.bin",
-                    "offset": 4096
-                  },
-                  {
-                    "path": "partition-table.bin",
-                    "offset": 32768
-                  },
-                  {
-                    "path": "striker.bin",
-                    "offset": 65536
-                  }
+                  { "path": "bootloader.bin",     "offset": 4096  },
+                  { "path": "partition-table.bin", "offset": 32768 },
+                  { "path": "striker.bin",         "offset": 65536 }
                 ]
               }
             ]
           }
-          MANIFEST
-
-          echo "Manifest generated:"
-          cat firmware/manifest.json
+          with open("firmware/manifest.json", "w") as f:
+            json.dump(manifest, f, indent=2)
+          print("manifest.json written")
+          PYEOF
 
       - name: Upload firmware artifacts
         uses: actions/upload-artifact@v4
@@ -138,7 +126,7 @@ jobs:
           path: firmware/
           retention-days: 30
 
-      - name: Create GitHub Release (on tag push)
+      - name: Create GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
@@ -146,12 +134,11 @@ jobs:
           body: |
             ## Striker ${{ github.ref_name }}
 
-            ### Flash via ESP Web Flasher
-            Use [ESP Web Flasher](https://esp.huhn.me) or [ESPHome Web](https://web.esphome.io):
-            1. Download all files below
-            2. Open the flasher in Chrome / Edge
-            3. Connect ESP32 via USB
-            4. Flash each binary at the correct offset:
+            ### Flash via browser (Chrome / Edge only)
+            Open the [Web Flasher](https://MatrixTM26.github.io/Striker), connect ESP32, click Install.
+
+            ### Flash via ESP Web Flasher (esp.huhn.me)
+            Download all files below, open [esp.huhn.me](https://esp.huhn.me), and flash at these offsets:
 
             | File | Offset |
             |------|--------|
@@ -188,7 +175,10 @@ jobs:
     name: Deploy Web Flasher (GitHub Pages)
     runs-on: ubuntu-22.04
     needs: build
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')
+    if: >
+      github.ref == 'refs/heads/main' ||
+      github.ref == 'refs/heads/master' ||
+      startsWith(github.ref, 'refs/tags/')
     permissions:
       contents: read
       pages: write
