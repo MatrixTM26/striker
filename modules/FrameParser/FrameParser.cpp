@@ -6,6 +6,7 @@
 #include "esp_err.h"
 #include "esp_event.h"
 #include "RadioInterface.hpp"
+ESP_EVENT_DEFINE_BASE(FrameParserEvents);
 
 static uint8_t TargetBssid[6];
 static SearchMode ActiveMode = static_cast<SearchMode>(-1);

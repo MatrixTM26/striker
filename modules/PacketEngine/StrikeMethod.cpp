@@ -16,11 +16,10 @@ static void OnBroadcastTick(void* Arg) {
 
 namespace StrikeMethod {
     void LaunchBroadcast(const wifi_ap_record_t* Target, unsigned PeriodSec) {
-        const esp_timer_create_args_t Args = {
-            .callback = &OnBroadcastTick,
-            .arg      = const_cast<wifi_ap_record_t*>(Target),
-            .name     = "BroadcastTimer"
-        };
+        esp_timer_create_args_t Args = {};
+        Args.callback = &OnBroadcastTick;
+        Args.arg      = const_cast<wifi_ap_record_t*>(Target);
+        Args.name     = "BroadcastTimer";
         ESP_ERROR_CHECK(esp_timer_create(&Args, &BroadcastTimer));
         ESP_ERROR_CHECK(esp_timer_start_periodic(BroadcastTimer,
             static_cast<uint64_t>(PeriodSec) * 1'000'000ULL));

@@ -6,6 +6,5 @@ idf_component_register(
         "StrikeHandshake.cpp"
         "StrikeDisrupt.cpp"
     INCLUDE_DIRS "." ".."
-    REQUIRES esp_event esp_timer esp_wifi
-    PRIV_REQUIRES RadioInterface FrameParser CaptureWriter FrameInjector
+    REQUIRES esp_event esp_timer esp_wifi FrameParser RadioInterface CaptureWriter FrameInjector
 )

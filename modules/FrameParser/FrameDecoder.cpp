@@ -7,7 +7,6 @@
 #include "esp_log.h"
 #include "esp_wifi_types.h"
 
-ESP_EVENT_DEFINE_BASE(FrameParserEvents);
 
 
 static PmkidNode* ParsePmkidFromKeyData(uint8_t* KeyData, uint16_t Length) {

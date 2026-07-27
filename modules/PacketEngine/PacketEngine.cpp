@@ -85,11 +85,10 @@ namespace PacketEngine {
     }
 
     void Boot() {
-        const esp_timer_create_args_t TimerArgs = {
-            .callback = &OnDurationExpired,
-            .arg      = nullptr,
-            .name     = "DurationTimer"
-        };
+        esp_timer_create_args_t TimerArgs = {};
+        TimerArgs.callback = &OnDurationExpired;
+        TimerArgs.arg      = nullptr;
+        TimerArgs.name     = "DurationTimer";
         ESP_ERROR_CHECK(esp_timer_create(&TimerArgs, &DurationTimer));
         ESP_ERROR_CHECK(esp_event_handler_register(
             HttpServerEvents, EventStrikeRequest, &OnLaunchRequest, nullptr));

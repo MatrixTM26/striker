@@ -11,7 +11,6 @@
 #include "FrameParser.hpp"
 #include "CaptureWriter.hpp"
 
-static const char* Tag         = "StrikeHandshake";
 static uint8_t     ActiveMethod = static_cast<uint8_t>(-1);
 static const wifi_ap_record_t* ActiveTarget = nullptr;
 

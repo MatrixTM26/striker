@@ -12,12 +12,10 @@ constexpr uint32_t HccapxVersion    = 4;
 constexpr uint8_t  KeyVersionWpa2   = 2;
 constexpr unsigned MaxEapolSize     = 256;
 
-static HccapxRecord Record = {
-    .Signature   = HccapxSignature,
-    .Version     = HccapxVersion,
-    .MessagePair = 255,
-    .KeyVersion  = KeyVersionWpa2
-};
+static HccapxRecord Record;
+
+
+
 
 static unsigned MsgAp      = 0;
 static unsigned MsgSta     = 0;
@@ -86,6 +84,7 @@ static void HandleStaFrame(DataFrame* Frame, EapolPacket* Eapol, EapolKeyPacket*
 
 namespace HccapxWriter {
     void Init(const uint8_t* Ssid, unsigned Size) {
+        InitRecord();
         Record.SsidLength   = static_cast<uint8_t>(Size);
         Record.MessagePair  = 255;
         MsgAp = MsgSta = EapolSource = 0;
