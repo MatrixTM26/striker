@@ -6,19 +6,14 @@
 #define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
 #include "esp_log.h"
 
-
-constexpr uint32_t HccapxSignature  = 0x58504348;
-constexpr uint32_t HccapxVersion    = 4;
-constexpr uint8_t  KeyVersionWpa2   = 2;
-constexpr unsigned MaxEapolSize     = 256;
+constexpr uint32_t HccapxSignature = 0x58504348;
+constexpr uint32_t HccapxVersion   = 4;
+constexpr uint8_t  KeyVersionWpa2  = 2;
+constexpr unsigned MaxEapolSize    = 256;
 
 static HccapxRecord Record;
-
-
-
-
-static unsigned MsgAp      = 0;
-static unsigned MsgSta     = 0;
+static unsigned MsgAp       = 0;
+static unsigned MsgSta      = 0;
 static unsigned EapolSource = 0;
 
 static bool IsZero(const uint8_t* Arr, unsigned Len) {
@@ -84,12 +79,13 @@ static void HandleStaFrame(DataFrame* Frame, EapolPacket* Eapol, EapolKeyPacket*
 
 namespace HccapxWriter {
     void Init(const uint8_t* Ssid, unsigned Size) {
-        InitRecord();
-        Record.SsidLength   = static_cast<uint8_t>(Size);
-        Record.MessagePair  = 255;
+        memset(&Record, 0, sizeof(Record));
+        Record.Signature   = HccapxSignature;
+        Record.Version     = HccapxVersion;
+        Record.MessagePair = 255;
+        Record.KeyVersion  = KeyVersionWpa2;
+        Record.SsidLength  = static_cast<uint8_t>(Size);
         MsgAp = MsgSta = EapolSource = 0;
-        memset(Record.MacAccessPoint, 0, 6);
-        memset(Record.MacStation, 0, 6);
         memcpy(Record.Ssid, Ssid, Size);
     }
 
