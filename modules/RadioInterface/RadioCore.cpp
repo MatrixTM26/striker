@@ -8,7 +8,6 @@
 #include "esp_netif.h"
 #include "esp_event.h"
 
-static const char* Tag = "RadioCore";
 static bool Initialized = false;
 static uint8_t OriginalApMac[6];
 
@@ -31,13 +30,13 @@ static void InitApSta() {
 namespace RadioInterface {
     void StartAccessPoint(wifi_config_t* Config) {
         if (!Initialized) InitApSta();
-        ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_AP, Config));
+        ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, Config));
     }
 
     void StopAccessPoint() {
         wifi_config_t Cfg = {};
         Cfg.ap.max_connection = 0;
-        ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_AP, &Cfg));
+        ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &Cfg));
     }
 
     void StartManagementAp() {
@@ -60,7 +59,7 @@ namespace RadioInterface {
         memcpy(Cfg.sta.ssid, Target->ssid, 32);
         if (Password && strlen(Password) < 64)
             memcpy(Cfg.sta.password, Password, strlen(Password) + 1);
-        ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &Cfg));
+        ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &Cfg));
         ESP_ERROR_CHECK(esp_wifi_connect());
     }
 

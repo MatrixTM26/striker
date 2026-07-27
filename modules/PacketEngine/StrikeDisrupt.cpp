@@ -5,7 +5,6 @@
 #define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
 #include "esp_log.h"
 
-static const char* Tag = "StrikeDisrupt";
 static uint8_t ActiveMethod = static_cast<uint8_t>(-1);
 
 namespace StrikeDisrupt {

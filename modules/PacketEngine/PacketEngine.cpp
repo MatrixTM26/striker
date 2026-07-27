@@ -13,7 +13,6 @@
 #include "esp_timer.h"
 #include "RadioInterface.hpp"
 
-static const char* Tag = "PacketEngine";
 
 static EngineStatus Status = { StateIdle, static_cast<uint8_t>(-1), 0, nullptr };
 static esp_timer_handle_t DurationTimer = nullptr;

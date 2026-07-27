@@ -4,16 +4,16 @@
 #include "esp_err.h"
 #include "esp_wifi.h"
 
-static const char* Tag = "RadioScanner";
 static NetworkList Catalog;
 
 namespace RadioInterface {
     void ScanNetworks() {
         Catalog.Count = CONFIG_RADAR_MAX_TARGETS;
-        wifi_scan_config_t Cfg = {
-            .ssid = nullptr, .bssid = nullptr,
-            .channel = 0, .scan_type = WIFI_SCAN_TYPE_ACTIVE
-        };
+        wifi_scan_config_t Cfg = {};
+        Cfg.ssid      = nullptr;
+        Cfg.bssid     = nullptr;
+        Cfg.channel   = 0;
+        Cfg.scan_type = WIFI_SCAN_TYPE_ACTIVE;
         ESP_ERROR_CHECK(esp_wifi_scan_start(&Cfg, true));
         ESP_ERROR_CHECK(esp_wifi_scan_get_ap_records(&Catalog.Count, Catalog.Records));
     }

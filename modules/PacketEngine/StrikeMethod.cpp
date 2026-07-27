@@ -8,7 +8,6 @@
 #include "RadioInterface.hpp"
 #include "FrameInjector.hpp"
 
-static const char* Tag = "StrikeMethod";
 static esp_timer_handle_t BroadcastTimer = nullptr;
 
 static void OnBroadcastTick(void* Arg) {

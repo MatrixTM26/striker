@@ -9,7 +9,6 @@
 
 ESP_EVENT_DEFINE_BASE(FrameParserEvents);
 
-static const char* Tag = "FrameDecoder";
 
 static PmkidNode* ParsePmkidFromKeyData(uint8_t* KeyData, uint16_t Length) {
     uint8_t* Cursor = KeyData;

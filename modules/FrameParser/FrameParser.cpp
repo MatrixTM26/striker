@@ -7,7 +7,6 @@
 #include "esp_event.h"
 #include "RadioInterface.hpp"
 
-static const char* Tag = "FrameParser";
 static uint8_t TargetBssid[6];
 static SearchMode ActiveMode = static_cast<SearchMode>(-1);
 

@@ -4,7 +4,6 @@
 #define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
 #include "esp_log.h"
 
-static const char* Tag = "PcapWriter";
 
 constexpr uint32_t SnapLen       = 65535;
 constexpr uint32_t PcapMagic     = 0xa1b2c3d4;

@@ -7,7 +7,6 @@
 #include "esp_wifi.h"
 #include "esp_wifi_types.h"
 
-static const char* Tag = "FrameInjector";
 
 static constexpr std::array<uint8_t, 26> DeauthTemplate = {{
     0xc0, 0x00, 0x3a, 0x01,

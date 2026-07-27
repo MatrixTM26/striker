@@ -8,7 +8,6 @@
 
 ESP_EVENT_DEFINE_BASE(RadioScannerEvents);
 
-static const char* Tag = "RadioSniffer";
 
 static void OnRawFrame(void* Buf, wifi_promiscuous_pkt_type_t Type) {
     auto* Frame = static_cast<wifi_promiscuous_pkt_t*>(Buf);

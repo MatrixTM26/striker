@@ -10,7 +10,6 @@
 #include "CaptureWriter.hpp"
 #include "pages/page_index.h"
 
-static const char* Tag = "HttpServer";
 
 ESP_EVENT_DEFINE_BASE(HttpServerEvents);
 

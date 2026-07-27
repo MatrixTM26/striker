@@ -9,7 +9,6 @@
 #include "RadioInterface.hpp"
 #include "FrameParser.hpp"
 
-static const char* Tag = "StrikePmkid";
 static const wifi_ap_record_t* ActiveTarget = nullptr;
 
 static void OnPmkidCaptured(void*, esp_event_base_t, int32_t, void* Data) {

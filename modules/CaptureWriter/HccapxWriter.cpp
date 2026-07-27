@@ -6,7 +6,6 @@
 #define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
 #include "esp_log.h"
 
-static const char* Tag = "HccapxWriter";
 
 constexpr uint32_t HccapxSignature  = 0x58504348;
 constexpr uint32_t HccapxVersion    = 4;
