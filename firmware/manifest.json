@@ -1,0 +1,23 @@
+{
+  "name": "Striker",
+  "new_install_prompt_erase": true,
+  "builds": [
+    {
+      "chipFamily": "ESP32",
+      "parts": [
+        {
+          "path": "bootloader.bin",
+          "offset": 4096
+        },
+        {
+          "path": "partition-table.bin",
+          "offset": 32768
+        },
+        {
+          "path": "striker.bin",
+          "offset": 65536
+        }
+      ]
+    }
+  ]
+}
