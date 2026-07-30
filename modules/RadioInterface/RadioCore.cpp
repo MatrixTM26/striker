@@ -7,16 +7,25 @@
 #include "esp_wifi_types.h"
 #include "esp_netif.h"
 #include "esp_event.h"
+#include "nvs_flash.h"
 
-static bool Initialized = false;
+static bool    Initialized = false;
 static uint8_t OriginalApMac[6];
 
 static void OnWifiEvent(void*, esp_event_base_t, int32_t, void*) {}
 
 static void InitApSta() {
+    esp_err_t NvsStatus = nvs_flash_init();
+    if (NvsStatus == ESP_ERR_NVS_NO_FREE_PAGES || NvsStatus == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+        ESP_ERROR_CHECK(nvs_flash_erase());
+        NvsStatus = nvs_flash_init();
+    }
+    ESP_ERROR_CHECK(NvsStatus);
+
     ESP_ERROR_CHECK(esp_netif_init());
     esp_netif_create_default_wifi_ap();
     esp_netif_create_default_wifi_sta();
+
     wifi_init_config_t Cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&Cfg));
     ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
@@ -41,7 +50,7 @@ namespace RadioInterface {
 
     void StartManagementAp() {
         wifi_config_t Cfg = {};
-        memcpy(Cfg.ap.ssid,     CONFIG_CONSOLE_SSID,     strlen(CONFIG_CONSOLE_SSID));
+        memcpy(Cfg.ap.ssid,     CONFIG_CONSOLE_SSID, strlen(CONFIG_CONSOLE_SSID));
         memcpy(Cfg.ap.password, CONFIG_CONSOLE_KEY,  strlen(CONFIG_CONSOLE_KEY));
         Cfg.ap.ssid_len       = strlen(CONFIG_CONSOLE_SSID);
         Cfg.ap.max_connection = CONFIG_CONSOLE_CLIENT_LIMIT;
